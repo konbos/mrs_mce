@@ -3,7 +3,7 @@
 # Author: Konstantin E Bosbach <konstantin.bosbach@mars.uni-freiburg.de>
 
 
-import seaborn as sb
+import seaborn as sns
 import glob
 import re
 import os
