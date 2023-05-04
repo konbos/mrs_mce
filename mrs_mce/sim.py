@@ -2,7 +2,6 @@
 #
 # Author: Konstantin E Bosbach <konstantin.bosbach@mars.uni-freiburg.de> 
 
-# mc_gen.py
 import numpy as np
 import pandas as pd
 import time
@@ -17,7 +16,7 @@ def synth_and_ana(noise_sd, fit_parameter, fit_snr, fit_sdnoise,
     """Synthetise spectra with given noise-covariance, analyse the data and
     return table of fitting parameters with a fit-plot."""
     
-    # #Generate synthetic data
+    #Generate synthetic data
     fidS, mrsA, concentrationsS = synth.syntheticFromBasisFile(
         basis_path,
         concentrations=syn_parameter_dict,
@@ -25,8 +24,11 @@ def synth_and_ana(noise_sd, fit_parameter, fit_snr, fit_sdnoise,
         noisecovariance=[[np.divide(np.square(noise_sd), 2)]],
         bandwidth=6000,
         ind_scaling=['Mac'],
-        broadening=(9.0, 0.0)
+        broadening=(9.0, 0.0),
+        metab_groups=['Mac']
     )
+    print(mrsA.names)
+    print(concentrationsS)
     metab_groups = mrsA.parse_metab_groups("combine_all")
     mrsA.FID = fidS
 
@@ -47,7 +49,7 @@ def synth_and_ana(noise_sd, fit_parameter, fit_snr, fit_sdnoise,
                        ["NAA", "NAAG"]]
     res.combine(combinationList)
     
-    ## Write results
+    # Write results
     noise_sd = np.std(mrsA.FID[1000:1600])   
     fit_sdnoise.append(noise_sd)
     fit_snr.append(res.SNR.spectrum) 
@@ -67,7 +69,7 @@ def mc(noise_sd, syn_parameter_dict, basis_path,
        file_out_path, n, shortage=True):
     """Function for calling synth_and_ana repeatedly,
      as in Monte-Carlo approach"""
-    runtime = time.time()       # timer for inspection
+    runtime = time.time()     # timer for runtime feedback
 
     if shortage:
         try:
@@ -89,7 +91,7 @@ def mc(noise_sd, syn_parameter_dict, basis_path,
     fit_varnoise=[]
 
     # Call function generation the desired amount of times
-    ## first run save image
+    ## first run save (&plot) image
     noise_fit = synth_and_ana(
             noise_sd, 
             fit_parameter=fit_parameter,
@@ -117,7 +119,7 @@ def mc(noise_sd, syn_parameter_dict, basis_path,
 
     return noise_fit, file_out_path
 
-def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False, output="default"):
+def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False, output="default", param_dict=False):
     '''
     Pipeline mc call : get it running
     Helper code
@@ -130,13 +132,16 @@ def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False, output="
     #read in data
     csv_path = Path(workspace_path / 'fit_conc_result.csv')
     df_parameter_synth = pd.read_csv(csv_path, index_col=0)
-    syn_parameter_dic = df_parameter_synth.mean().to_dict()
-    syn_parameter_dic['PCh'] = syn_parameter_dic['PCho']
-    syn_parameter_dic['Mac'] = syn_parameter_dic['mm']
+    syn_parameter_dict = df_parameter_synth.mean().to_dict()
+    syn_parameter_dict['PCh'] = syn_parameter_dict['PCho']
+    syn_parameter_dict['Mac'] = syn_parameter_dict['mm']
         
-    # init mc
+    if param_dict:
+        syn_parameter_dict = param_dict
+        
     for s in step:
-        spd = dict(syn_parameter_dic)
+        # init mc
+        spd = dict(syn_parameter_dict)
         if absolute:
             spd[para] = s
             context = "abs"

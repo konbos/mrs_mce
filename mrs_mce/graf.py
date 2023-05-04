@@ -2,17 +2,18 @@
 #
 # Author: Konstantin E Bosbach <konstantin.bosbach@mars.uni-freiburg.de>
 
-import pandas as pd
+
 import seaborn as sb
 import glob
 import re
 import os
+import pandas as pb
 
 def mcGraf(dex):
     dfs = pd.DataFrame()
     ptrn = re.compile(r'(\w{0,5})-(\w{3,})~([-\d\.]+)_noiseSD-([\d\.]+)_REP-(\d+)\.csv')
     
-    #print(os.getcwd())
+    #print(os.getcwd())  # use relative file path
     file_paths = [os.path.basename(x) for x in dex.glob('*.csv')]
     
     paras = []
@@ -38,3 +39,28 @@ def mcGraf(dex):
     mindex = pd.MultiIndex.from_arrays([paras, modes, delts, noiSD, runss], 
                                  names=['transmitter', 'abs/rel', 'change', 'noise-SD', 'runs'])
     return datas, mindex
+
+def mcLoad(subdir, metab="NAA"):
+    datas, mindex = mcGraf(subdir)
+    data = pd.concat(datas, axis=1)
+    data.columns = mindex
+    format_data = data.unstack(level=1).stack(level="runs").droplevel(axis=0, level=1).reset_index(drop=True)
+    format_data.columns = format_data.columns.set_names('metabolites', level=4)
+
+    # list data for metabolite
+    index = format_data.melt().metabolites==metab
+    to_plot = format_data.melt().loc[index,:]
+	
+    return index, to_plot
+
+def mcPaint(index, to_plot, xlim, ylim)
+    sns.lineplot(data=to_plot, x='change', y='value', hue='noise-SD', 
+                  legend="full")
+	
+	if xlim:
+		mtplot.xlim(xlim)
+	if ylim:
+		mtplot.ylim(ylim)
+	
+	
+	 
