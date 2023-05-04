@@ -51,6 +51,10 @@ def mcLoad(subdir, metab="NAA"):
     # list data for metabolite
     index = format_data.melt().metabolites==metab
     to_plot = format_data.melt().loc[index,:]
+	
+	# additional masks:
+	#index_2 = to_plot.change!="0.5"
+	#to_plot_2 = to_plot.loc[index_2,:]
 
     return index, to_plot
 
