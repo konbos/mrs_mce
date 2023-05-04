@@ -50,17 +50,15 @@ def mcLoad(subdir, metab="NAA"):
     # list data for metabolite
     index = format_data.melt().metabolites==metab
     to_plot = format_data.melt().loc[index,:]
-	
+
     return index, to_plot
 
 def mcPaint(index, to_plot, xlim, ylim):
     sns.lineplot(data=to_plot, x='change', y='value', hue='noise-SD', 
                   legend="full")
-	
-	if xlim:
-		mtplot.xlim(xlim)
-	if ylim:
-		mtplot.ylim(ylim)
-	
-	
+
+    if xlim:
+        mtplot.xlim(xlim)
+    if ylim:
+        mtplot.ylim(ylim)
 	 
