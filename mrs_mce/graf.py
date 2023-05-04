@@ -53,7 +53,7 @@ def mcLoad(subdir, metab="NAA"):
 	
     return index, to_plot
 
-def mcPaint(index, to_plot, xlim, ylim)
+def mcPaint(index, to_plot, xlim, ylim):
     sns.lineplot(data=to_plot, x='change', y='value', hue='noise-SD', 
                   legend="full")
 	
