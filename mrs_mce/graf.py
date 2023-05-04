@@ -7,7 +7,7 @@ import seaborn as sb
 import glob
 import re
 import os
-import pandas as pb
+import pandas as pd
 
 def mcGraf(dex):
     dfs = pd.DataFrame()
