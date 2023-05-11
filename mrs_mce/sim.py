@@ -88,7 +88,6 @@ def mc(noise_sd, syn_parameter_dict, basis_path,
     fit_parameter=[]
     fit_snr=[]
     fit_sdnoise=[]
-    fit_varnoise=[]
 
     # Call function generation the desired amount of times
     ## first run save (&plot) image
