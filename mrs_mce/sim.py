@@ -116,7 +116,7 @@ def mc(noise_sd, syn_parameter_dict, basis_path,
 
     return noise_fit, file_out_path
 
-def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False, output="default"):
+def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False):
     '''
     Pipeline mc call : get simulation running in folder
 	assumes : output in folder of script 
