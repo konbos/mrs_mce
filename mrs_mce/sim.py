@@ -6,17 +6,17 @@ import numpy as np
 import pandas as pd
 import time
 
-from pathlib import Path
 from fsl_mrs.core import MRS
 from fsl_mrs.utils import mrs_io
 from fsl_mrs.utils.synthetic import synthetic_from_basis as synth
+from pathlib import Path
 
 def synth_and_ana(noise_sd, fit_parameter, fit_snr, fit_sdnoise,
                   syn_parameter_dict, basis_path, printIm = None):
     """Synthetise spectra with given noise-covariance, analyse the data and
     return table of fitting parameters with a fit-plot."""
     
-    #Generate synthetic data
+    # #Generate synthetic data
     fidS, mrsA, concentrationsS = synth.syntheticFromBasisFile(
         basis_path,
         concentrations=syn_parameter_dict,
@@ -24,11 +24,8 @@ def synth_and_ana(noise_sd, fit_parameter, fit_snr, fit_sdnoise,
         noisecovariance=[[np.divide(np.square(noise_sd), 2)]],
         bandwidth=6000,
         ind_scaling=['Mac'],
-        broadening=(9.0, 0.0),
-        metab_groups=['Mac']
+        broadening=(syn_parameter_dict['gamma_0'], 0.0)
     )
-    print(mrsA.names)
-    print(concentrationsS)
     metab_groups = mrsA.parse_metab_groups("combine_all")
     mrsA.FID = fidS
 
@@ -49,7 +46,7 @@ def synth_and_ana(noise_sd, fit_parameter, fit_snr, fit_sdnoise,
                        ["NAA", "NAAG"]]
     res.combine(combinationList)
     
-    # Write results
+    ## Write results
     noise_sd = np.std(mrsA.FID[1000:1600])   
     fit_sdnoise.append(noise_sd)
     fit_snr.append(res.SNR.spectrum) 
@@ -69,7 +66,7 @@ def mc(noise_sd, syn_parameter_dict, basis_path,
        file_out_path, n, shortage=True):
     """Function for calling synth_and_ana repeatedly,
      as in Monte-Carlo approach"""
-    runtime = time.time()     # timer for runtime feedback
+    runtime = time.time()       # timer for inspection
 
     if shortage:
         try:
@@ -88,9 +85,10 @@ def mc(noise_sd, syn_parameter_dict, basis_path,
     fit_parameter=[]
     fit_snr=[]
     fit_sdnoise=[]
+    fit_varnoise=[]
 
     # Call function generation the desired amount of times
-    ## first run save (&plot) image
+    ## first run save image
     noise_fit = synth_and_ana(
             noise_sd, 
             fit_parameter=fit_parameter,
@@ -118,29 +116,31 @@ def mc(noise_sd, syn_parameter_dict, basis_path,
 
     return noise_fit, file_out_path
 
-def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False, output="default", param_dict=False):
+def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False, output="default"):
     '''
-    Pipeline mc call : get it running
+    Pipeline mc call : get simulation running in folder
+	assumes : output in folder of script 
+	and: workspace/[fsl_mrs_mce]/[experiment X]/[script.ipynb.py]
+	and: workspace/fit_conc_result.csv     # input data
+	and: workspace/basis-steam/  	       # spectrum basis
     Helper code
     '''
     # path
-    workspace_path =  Path('/home/ko/code/workspace')
+    workspace_path =  Path('../../')
     basis_path = Path(workspace_path / 'basis-steam')
-    output_path = Path(workspace_path / 'output' / output)
+    output_path = Path('./')
     
     #read in data
     csv_path = Path(workspace_path / 'fit_conc_result.csv')
     df_parameter_synth = pd.read_csv(csv_path, index_col=0)
-    syn_parameter_dict = df_parameter_synth.mean().to_dict()
-    syn_parameter_dict['PCh'] = syn_parameter_dict['PCho']
-    syn_parameter_dict['Mac'] = syn_parameter_dict['mm']
+    syn_parameter_dic = df_parameter_synth.mean().to_dict()
+    syn_parameter_dic['gamma_0'] = 24.49517127663636       # in vivo
+    syn_parameter_dic['PCh'] = syn_parameter_dic['PCho']
+    syn_parameter_dic['Mac'] = syn_parameter_dic['mm']
         
-    if param_dict:
-        syn_parameter_dict = param_dict
-        
+    # init mc
     for s in step:
-        # init mc
-        spd = dict(syn_parameter_dict)
+        spd = dict(syn_parameter_dic)
         if absolute:
             spd[para] = s
             context = "abs"
