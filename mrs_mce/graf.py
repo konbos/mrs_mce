@@ -5,10 +5,11 @@
 import glob
 import re
 import os
+from pathlib import Path
+
 import pandas as pd
 import seaborn as sns
-
-from pathlib import Path
+import numpy as np
 
 def mcGraf(dex):
     dfs = pd.DataFrame()
