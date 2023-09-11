@@ -41,22 +41,87 @@ def mcGraf(dex):
                                  names=['transmitter', 'abs/rel', 'change', 'noise-SD', 'runs'])
     return datas, mindex
 
-def mcLoad(subdir, metab="NAA"):
-    datas, mindex = mcGraf(subdir)
+def mcLoad(subdir="", metabolite="GABA", return_format_data=False, return_SDs=False):
+    ### Loads all data within directory subdir, sorting for *metabolite*
+    loc = Path(subdir)
+    datas, mindex = mcGraf(loc)
     data = pd.concat(datas, axis=1)
     data.columns = mindex
     format_data = data.unstack(level=1).stack(level="runs").droplevel(axis=0, level=1).reset_index(drop=True)
     format_data.columns = format_data.columns.set_names('metabolites', level=4)
 
-    # list data for metabolite
-    index = format_data.melt().metabolites==metab
+    # list metabolite data
+    index = format_data.melt().metabolites==metabolite
     to_plot = format_data.melt().loc[index,:]
-	
-	# additional masks:
-	#index_2 = to_plot.change!="0.5"
-	#to_plot_2 = to_plot.loc[index_2,:]
-
-    return index, to_plot
+    SDs=to_plot['noise-SD'].unique()
+    
+    return_tuple = index, to_plot            
+    if return_format_data:
+        return_tuple += (format_data,)
+    if return_SDs:
+        return_tuple += (SDs,)
+    return return_tuple 
+    
+def mcLinFit(index, to_plot, metabolite, SDs, abszissa='change', ordinate='value', verbose=False):
+    ### Linear fit on input data, per SD    
+    # trendline  numpy.polyfit
+    trend_a = []
+    trend_b = []
+    # individual fit per sd
+    for s in SDs:
+        # work copy
+        ind = index.copy()
+        pot = to_plot.copy()
+        if verbose:
+            print(pot)
+        # only use data with specific noise
+        ind = pot['noise-SD']==s
+        pot = pot.loc[ind,:]
+        # filter out nan
+        ind = pot['value'].notna()
+        pot = pot.loc[ind,:]
+        # fitting (linear)
+        x = np.array(pot['change'])
+        y = np.array(pot['value'])
+        t = np.polyfit(x, y, 1) # polyfit deprecated? np.polynomial?
+        if verbose:
+            print(s,t)
+        trend_a.append(t[0])
+        trend_b.append(t[1])
+    fit  = pd.DataFrame(data={'noise-SD': SDs, 'slope': trend_a, 'offset':trend_b})
+    return fit
+    
+def mcTexture(transmitter, transmitters=[], fits=[], to_plot_s=[]):
+    ### Appends three different data structs to given lists
+    ### for quick drawing
+    index, to_plot, format_data, SDs = mcLoad(metabolite=transmitter, return_format_data=True, return_SDs=True)
+    fit = mcLinFit(index, to_plot, transmitter, SDs)
+    transmitters.append(transmitter)
+    to_plot_s.append(to_plot)
+    fits.append(fit)
+    return transmitters, fits, to_plot_s
+    
+def mcMultiTexture(transmitter, transmitters=[], fits=[], to_plot_s=[]):
+    ### try to load two transmitters, add values, and return as mcTexture does.
+    plot2, data2 = [],[]
+    trans_name = str(transmitter[0])
+    for trans in transmitter:
+        index, plot, data, SDs = mcLoad(metabolite=trans, return_format_data=True, return_SDs=True)
+        plot2.append(plot)
+        data2.append(data)
+        if trans != transmitter[0]: #combine name
+            trans_name += str("+"+trans)
+    to_plot = plot2[0].copy()
+    to_plot["value"]=plot2[0]["value"].values+plot2[1]["value"].values
+    to_plot["metabolites"]=trans_name
+    
+    fit = mcLinFit(index, to_plot, transmitter, SDs)
+    
+    transmitters.append(trans_name)
+    to_plot_s.append(to_plot)
+    fits.append(fit)
+        
+    return transmitters, fits, to_plot_s
 
 def mcPaint(index, to_plot, xlim=False, ylim=False):
     sns.lineplot(data=to_plot, x='change', y='value', hue='noise-SD', 

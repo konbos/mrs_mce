@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='mrs_mce',
-      version='0.0.10',
+      version='0.0.12',
       description='A fsl_mrs Monte Carlo estimation approach',
       url='https://github.com/konbos/mrs_mce.git',
       author='Konstantin E Bosbach',
