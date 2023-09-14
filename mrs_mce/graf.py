@@ -45,11 +45,11 @@ def mcGraf(dex, explicit={}):
                         RtA = False
                     
         if RtA:
-            paras.append(para)
-            modes.append(mode)
-            delts.append(delt)
-            noiSD.append(noiS)
-            runss.append(runs)
+            paras.append(readIn["parameter"])
+            modes.append(readIn["mode"])
+            delts.append(readIn["change"])
+            noiSD.append(readIn["noise-SD"])
+            runss.append(readIn["runs"])
         
             # read the csv files
             datas.append(pd.read_csv(Path(dex/fip), index_col=0).stack())
