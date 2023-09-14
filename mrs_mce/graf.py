@@ -11,7 +11,9 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 
-def mcGraf(dex):
+def mcGraf(dex, explicit={}): 
+    # load all data-files from path dex, matching ptrn, 
+    # explicit={} constraints: list of acceptable values for respective match_obj[:]
     dfs = pd.DataFrame()
     ptrn = re.compile(r'(\w{0,5})-(\w{3,})~([-\d\.]+)_noiseSD-([\d\.]+)_REP-(\d+)\.csv')
     
@@ -26,26 +28,40 @@ def mcGraf(dex):
     datas = []
     
     for fip in file_paths:
-        match_obj = ptrn.match(fip)   
+        match_obj = ptrn.match(fip)
         
-        # parameter from file-name for labeling data
-        paras.append(match_obj[1])
-        modes.append(match_obj[2])
-        delts.append(float(match_obj[3]))
-        noiSD.append(float(match_obj[4]))
-        runss.append(int(match_obj[5]))
+        readIn = {
+            "parameter" : match_obj[1],
+            "mode" : match_obj[2],
+            "change" : float(match_obj[3]),
+            "noise-SD" : float(match_obj[4]),
+            "runs" : int(match_obj[5]),
+        }
         
-        # read the csv files
-        datas.append(pd.read_csv(Path(dex/fip), index_col=0).stack())
+        RtA = True # RtA: Return to Array
+        # check if all explicit{…} conditions are met
+        for key in explicit:
+            if readIn[key] not in explicit[key]:
+                        RtA = False
+                    
+        if RtA:
+            paras.append(para)
+            modes.append(mode)
+            delts.append(delt)
+            noiSD.append(noiS)
+            runss.append(runs)
+        
+            # read the csv files
+            datas.append(pd.read_csv(Path(dex/fip), index_col=0).stack())
     
     mindex = pd.MultiIndex.from_arrays([paras, modes, delts, noiSD, runss], 
                                  names=['transmitter', 'abs/rel', 'change', 'noise-SD', 'runs'])
     return datas, mindex
-
-def mcLoad(subdir="", metabolite="GABA", return_format_data=False, return_SDs=False):
-    ### Loads all data within directory subdir, sorting for *metabolite*
+	
+def mcLoad(subdir="", metabolite="GABA", return_format_data=False, return_SDs=False, explicit={}):
+    ### uses mcGraf to load data, sorting for *metabolite*
     loc = Path(subdir)
-    datas, mindex = mcGraf(loc)
+    datas, mindex = mcGraf(loc, explicit)
     data = pd.concat(datas, axis=1)
     data.columns = mindex
     format_data = data.unstack(level=1).stack(level="runs").droplevel(axis=0, level=1).reset_index(drop=True)
@@ -92,10 +108,12 @@ def mcLinFit(index, to_plot, metabolite, SDs, abszissa='change', ordinate='value
     fit  = pd.DataFrame(data={'noise-SD': SDs, 'slope': trend_a, 'offset':trend_b})
     return fit
     
-def mcTexture(transmitter, transmitters=[], fits=[], to_plot_s=[]):
+def mcTexture(transmitter, transmitters=[], fits=[], to_plot_s=[], explicit={}):
     ### Appends three different data structs to given lists
     ### for quick drawing
-    index, to_plot, format_data, SDs = mcLoad(metabolite=transmitter, return_format_data=True, return_SDs=True)
+    index, to_plot, format_data, SDs = mcLoad(metabolite=transmitter, 
+                                              return_format_data=True, return_SDs=True, 
+                                              explicit=explicit)
     fit = mcLinFit(index, to_plot, transmitter, SDs)
     transmitters.append(transmitter)
     to_plot_s.append(to_plot)
