@@ -108,24 +108,27 @@ def mcLinFit(index, to_plot, metabolite, SDs, abszissa='change', ordinate='value
     fit  = pd.DataFrame(data={'noise-SD': SDs, 'slope': trend_a, 'offset':trend_b})
     return fit
     
-def mcTexture(transmitter, transmitters=[], fits=[], to_plot_s=[], explicit={}):
+def mcTexture(transmitter, transmitters=[], fits=[], to_plot_s=[], explicit={}, subdir=""):
     ### Appends three different data structs to given lists
     ### for quick drawing
     index, to_plot, format_data, SDs = mcLoad(metabolite=transmitter, 
                                               return_format_data=True, return_SDs=True, 
-                                              explicit=explicit)
+                                              explicit=explicit,
+					      subdir=subdir)
     fit = mcLinFit(index, to_plot, transmitter, SDs)
     transmitters.append(transmitter)
     to_plot_s.append(to_plot)
     fits.append(fit)
     return transmitters, fits, to_plot_s
     
-def mcMultiTexture(transmitter, transmitters=[], fits=[], to_plot_s=[]):
+def mcMultiTexture(transmitter, transmitters=[], fits=[], to_plot_s=[], subdir=""):
     ### try to load two transmitters, add values, and return as mcTexture does.
     plot2, data2 = [],[]
     trans_name = str(transmitter[0])
     for trans in transmitter:
-        index, plot, data, SDs = mcLoad(metabolite=trans, return_format_data=True, return_SDs=True)
+        index, plot, data, SDs = mcLoad(metabolite=trans, 
+					return_format_data=True, return_SDs=True,
+					subdir=subdir)
         plot2.append(plot)
         data2.append(data)
         if trans != transmitter[0]: #combine name
