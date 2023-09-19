@@ -14,6 +14,8 @@ import numpy as np
 def mcGraf(dex, explicit={}): 
     # load all data-files from path dex, matching ptrn, 
     # explicit={} constraints: list of acceptable values for respective match_obj[:]
+	# cave: explicit{} can only have list values! 
+	# e.g. expli = {"parameter":[para], "noise-SD":[n], …}
     dfs = pd.DataFrame()
     ptrn = re.compile(r'(\w{0,5})-(\w{3,})~([-\d\.]+)_noiseSD-([\d\.]+)_REP-(\d+)\.csv')
     
@@ -60,6 +62,8 @@ def mcGraf(dex, explicit={}):
 	
 def mcLoad(subdir="", metabolite="GABA", return_format_data=False, return_SDs=False, explicit={}):
     ### uses mcGraf to load data, sorting for *metabolite*
+	# cave: explicit{} can only have list values! 
+	# e.g. expli = {"parameter":[para], "noise-SD":[n], …}
     loc = Path(subdir)
     datas, mindex = mcGraf(loc, explicit)
     data = pd.concat(datas, axis=1)
