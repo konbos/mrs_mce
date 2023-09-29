@@ -116,7 +116,7 @@ def mc(noise_sd, syn_parameter_dict, basis_path,
 
     return noise_fit, file_out_path
 
-def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False):
+def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False, workspace_path_string='../../', output_path_string='./'):
     '''
     Pipeline mc call : get simulation running in folder
 	assumes : output in folder of script 
@@ -126,9 +126,9 @@ def mcCall(n, noise_sd, para="NAA", step=[-0.1, 1, 10], absolute=False):
     Helper code
     '''
     # path
-    workspace_path =  Path('../../')
+    output_path = Path(output_path_string)
+    workspace_path =  Path(workspace_path_string)
     basis_path = Path(workspace_path / 'basis-steam')
-    output_path = Path('./')
     
     #read in data
     csv_path = Path(workspace_path / 'fit_conc_result.csv')
