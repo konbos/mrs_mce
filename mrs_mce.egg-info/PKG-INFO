@@ -1,7 +1,0 @@
-Metadata-Version: 2.1
-Name: mrs-mce
-Version: 0.0.10
-Summary: A fsl_mrs Monte Carlo estimation approach
-Home-page: https://github.com/konbos/mrs_mce.git
-Author: Konstantin E Bosbach
-Author-email: konstantin.bosbach@mars.uni-freiburg.de
